@@ -39,8 +39,8 @@ struct IR_Fuji // Создаём структуру температурных �
 
     // Массив перевёрнутых бит от 1 до 5
     // Используется в режиме работу кондиционера, режиме AUTO, скоростях турбины
-    uint8_t array_mode[10] = {  0x00, 0x80, 0x40, 0xC0, 0x20,
-                                0xA0, 0x60, 0xA0, 0x20, 0xC0};
+    uint8_t array_mode[5] = {  0x20, 0xC0, 0x00, 0x80, 0x40 };
+                                //0xA0, 0x60, 0xA0, 0x20, 0xC0};
 
     //                          auto  high   med   low  quiet
     uint8_t array_fan[13] =  {  0x20, 0xC0, 0x40, 0x80, 0x00,
@@ -59,7 +59,7 @@ struct IR_Fuji // Создаём структуру температурных �
                                 0x30, 0x50, 0x10, 0x60, 0x20};
 
 
-    uint8_t mode = mode_auto;
+    uint8_t mode = mode_cool;
     uint8_t temp = 30; // Текушая температура (18 - 30)
     uint8_t auto_m = 1; // Уровень AUTO (1 - 5)
     uint8_t fan_speed = 0; // 0 - auto, 1 - high, 2 - med, 3 - low, 4 - quiet - скорость турбины
@@ -90,8 +90,28 @@ int main() {
 
     } else {
 
-    // Формируем биты температуры
+        // -------- Формируем 10й байт ----------- start
+        Fuji.message[9] = 0;
+        Fuji.message[9] &= 0x1F; // Очищаем первые три бита
+        Fuji.message[9] |= (Fuji.array_mode[Fuji.mode]);
+        cout << "10 byte: ";
+        cout << hex << int(Fuji.message[9]) << endl;
 
+        // -------- Формируем 10й байт ----------- end
+        if (Fuji.mode == mode_heat) {
+
+        } else if (Fuji.mode == mode_fan) {
+
+        } else if (Fuji.mode == mode_auto) {
+
+        } else if (Fuji.mode == mode_cool) {
+
+        } else {
+// mode DRY
+
+        }
+    // Формируем биты температуры
+/*
     // -------- Формируем 9й байт ----------- start
     Fuji.message[8]=0; // очищаем девятый байт
     Fuji.message[8] |= Fuji.temp_arr[Fuji.temp-18];
@@ -148,7 +168,9 @@ int main() {
         for (uint8_t i=0; i<lenght; i++){
             cout << hex << int(Fuji.message[i]) << " ";
         }
+*/
     }
+
 
     return 0;
 }
