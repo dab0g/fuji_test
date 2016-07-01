@@ -2,12 +2,17 @@
 
 using namespace std;
 
-#define mode_auto 0
-#define mode_cool 1
-#define mode_dry  2
-#define mode_fan  3
-#define mode_heat 4
+#define mode_heat 0
+#define mode_fan  1
+#define mode_auto 2
+#define mode_cool 3
+#define mode_dry  4
 
+#define fan_auto  4
+#define fan_high  3
+#define fan_med   2
+#define fan_low   1
+#define fan_quiet 0
 
 uint16_t messageRAW[243] = {}; // Готовые для отправки данные в RAW формате.
 //uint16_t messageClean[15] = {0x28, 0xC6, 0x00, 0x08, 0x08, 0x3F, 0x10, 0x0C, 0x86, 0x80, 0x80, 0x00, 0x00, 0x00, 0xb6};
@@ -31,8 +36,15 @@ struct IR_Fuji // Создаём структуру температурных �
     uint8_t array_mode[10] = {  0x00, 0x80, 0x40, 0xC0, 0x20,
                                 0xA0, 0x60, 0xA0, 0x20, 0xC0};
 
-    uint8_t array_fan[10] =  {  0x00, 0x80, 0x40, 0xC0, 0x20,
-                                0xE0, 0x60, 0xA0, 0x20, 0xC0};
+    //                          auto  high   med   low  quiet
+    uint8_t array_fan[13] =  {  0x20, 0xC0, 0x40, 0x80, 0x00,
+                                0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0}; // у каждого режима в 15 байте своё смещение в массиве
+
+
+    //uint8_t array_fan[13] =  {  0x00, 0x80, 0x40, 0xC0, 0x20,
+    //                            0xE0, 0x60, 0xA0, 0x20, 0xC0, 0x40, 0x80, 0x00}; // у каждого режима в 15 байте своё смещение в массиве
+
+    uint8_t array_fan_offset[5] = {};
 
 
     // Используется в режиме AUTO
@@ -41,14 +53,15 @@ struct IR_Fuji // Создаём структуру температурных �
                                 0x30, 0x50, 0x10, 0x60, 0x20};
 
 
-    uint8_t mode = mode_cool;
-    uint8_t temp = 22; // Текушая температура (18 - 30)
+    uint8_t mode = mode_auto;
+    uint8_t temp = 30; // Текушая температура (18 - 30)
     uint8_t auto_m = 1; // Уровень AUTO (1 - 5)
-    uint8_t fan_speed = 2; // 0 - auto, 1 - high, 2 - med, 3 - low, 4 - quiet - скорость турбины
+    uint8_t fan_speed = 0; // 0 - auto, 1 - high, 2 - med, 3 - low, 4 - quiet - скорость турбины
     bool poweron = false;
+    // короткая посылка - 6 быйт
     bool poweroff = false;
     bool air_dir = false;
-    bool swing = true;
+    bool swing = false;
 
 } Fuji;
 
