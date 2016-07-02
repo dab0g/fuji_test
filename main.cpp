@@ -47,22 +47,17 @@ struct IR_Fuji // Создаём структуру температурных �
                                 0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0}; // у каждого режима в 15 байте своё смещение в массиве
 
 
-    //uint8_t array_fan[13] =  {  0x00, 0x80, 0x40, 0xC0, 0x20,
-    //                            0xE0, 0x60, 0xA0, 0x20, 0xC0, 0x40, 0x80, 0x00}; // у каждого режима в 15 байте своё смещение в массиве
-
-    uint8_t array_fan_offset[5] = {};
-
 
     // Используется в режиме AUTO
-    // режим AUTO                 1     2     3     4     5
+    // режим AUTO                 0     1     2     3     4
     uint8_t array_auto[10] = {  0x40, 0x20, 0x60, 0x10, 0x50,
-                                0x30, 0x50, 0x10, 0x60, 0x20};
+                                0x70, 0x30, 0x50, 0x10, 0x60};
 
 
     uint8_t mode = mode_auto;
     uint8_t temp = 18; // Текушая температура (18 - 30)
-    uint8_t auto_m = 1; // Уровень AUTO (1 - 5)
-    uint8_t fan_speed = fan_high ; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
+    uint8_t auto_m = 4; // Уровень AUTO (0 - 4)
+    uint8_t fan_speed = fan_quiet ; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
     bool poweron = false;
     // короткая посылка - 6 быйт
     bool poweroff = false;
@@ -140,7 +135,12 @@ int main() {
         } else if (Fuji.mode == mode_auto) {
             Fuji.message[8] |= Fuji.temp_arr[Fuji.temp-16];
             Fuji.message[14] |= Fuji.temp_arr[Fuji.temp-1];
-            Fuji.message[14] |= (Fuji.array_fan[Fuji.fan_speed+7]);
+            //Fuji.message[14] |= (Fuji.array_fan[Fuji.fan_speed+7]);
+            Fuji.message[8] |= Fuji.array_auto[Fuji.auto_m];
+            Fuji.message[14] &= 0x8F; // Очищаем первые три бита
+            Fuji.message[14] |= Fuji.array_auto[Fuji.auto_m+5];
+
+
         } else if (Fuji.mode == mode_cool) {
             Fuji.message[8] |= Fuji.temp_arr[Fuji.temp-16];
             Fuji.message[14] |= Fuji.temp_arr[Fuji.temp-1];
@@ -151,8 +151,11 @@ int main() {
             Fuji.message[14] |= Fuji.temp_arr[Fuji.temp-1];
             Fuji.message[14] |= (Fuji.array_fan[11]);
         }
-        cout << hex << int(Fuji.message[8]) << endl;
-        cout << hex << int(Fuji.message[14]) << endl;
+        cout << "8 byte : ";
+        cout << std::hex << long(Fuji.message[8]) << endl;
+        cout << "15 byte : ";
+        cout << std::hex << long(Fuji.message[14]) << endl;
+
     // Формируем биты температуры
 /*
     // -------- Формируем 9й байт ----------- start
