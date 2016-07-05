@@ -138,7 +138,6 @@ int main() {
                 Fuji.message[14] &= 0x8F; // Очищаем первые три бита
                 Fuji.message[8]  |= Fuji.array_auto[Fuji.auto_m];
                 Fuji.message[14] |= Fuji.array_auto[Fuji.auto_m + 5];
-//                cout << std::hex << int(Fuji.message[14]) << endl;
 
             } else if (Fuji.mode == mode_cool) {
                 Fuji.message[8] |= Fuji.temp_arr[Fuji.temp - 16];
@@ -146,35 +145,13 @@ int main() {
                 Fuji.message[14] |= (Fuji.array_fan[Fuji.fan_speed + mode_cool + 5]);
             } else {
 // mode DRY
-                //Fuji.fan_speed = fan_auto;
                 Fuji.message[8] |= Fuji.temp_arr[Fuji.temp - 16];
-
-
-
                 Fuji.message[14] &= 0x8F; // Очищаем первые три бита
                 Fuji.message[14] |= Fuji.temp_arr[Fuji.temp - 1];
-                cout << std::hex << int(Fuji.message[14]) << endl;
-
-
                 Fuji.message[14] &= 0x1F; // Очищаем первые три бита
-
                 Fuji.message[14] |= (Fuji.array_fan_dry[Fuji.fan_speed]); //7
-                //Fuji.message[14] |= (Fuji.array_fan[7]); //7
-                //Fuji.message[14] |= 0x50; quiet
-                //Fuji.message[14] |= 0x70; auto
-                //Fuji.message[14] |= 0xD0; // low
-                // 0x30 - med
-                // 0xb0 - high
-
-
-                cout << std::hex << int(Fuji.message[14]) << endl;
-                //Fuji.message[10] = 0x20; // ??
 
             }
-            //cout << "8 byte : ";
-            //cout << std::hex << long(Fuji.message[8]) << endl;
-            //cout << "15 byte : ";
-            //cout << std::hex << long(Fuji.message[14]) << endl;
 
             // Формируем биты температуры
             lenght = 15;
