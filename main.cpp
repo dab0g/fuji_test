@@ -14,61 +14,83 @@ using namespace std;
 #define fan_low   1
 #define fan_quiet 0
 
-uint16_t messageRAW[243] = {}; // Готовые для отправки данные в RAW формате.
+uint8_t message[15] = {}; // Готовые для отправки данные в RAW формате.
 //uint16_t messageClean[15] = {0x28, 0xC6, 0x00, 0x08, 0x08, 0x3F, 0x10, 0x0C, 0x86, 0x80, 0x80, 0x00, 0x00, 0x00, 0xb6};
 
-struct IR_Fuji // Создаём структуру температурных датчиков ds18b20
-{
-    // Почти готовое сообщение - полный формат.
-    // перед передачей к нему должен быть добавлен заголовок, окончание и оно должно быть переведено в RAW формат отправки
-    //                                                    |                  |    |     |                        |
-    uint8_t message[15] = {0x28, 0xC6, 0x00, 0x08, 0x08, 0x3F, 0x10, 0x0C, 0x86, 0x80, 0x80, 0x00, 0x00, 0x00, 0xb6};
 
-    // биты в посылке перевёрнуты, потому и делаем массивы
-    // битовый массив для температуры
+uint8_t mode = mode_dry;
+uint8_t temp = 18; // Текушая температура (18 - 30)
+uint8_t auto_m = 0; // Уровень AUTO (0 - 4)
+uint8_t fan_speed = fan_auto; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
+bool poweron = true;
+// короткая посылка - 6 быйт
+bool poweroff = false;
+bool air_dir = false;
+bool swing = false;
+
+
+uint8_t* buildMsg(uint8_t mode, uint8_t temp, uint8_t auto_m, uint8_t fan_speed, bool poweron, bool poweroff, bool air_dir, bool swing) {
+
+
+
+    struct IR_Fuji // Создаём структуру температурных датчиков ds18b20
+    {
+        // Почти готовое сообщение - полный формат.
+        // перед передачей к нему должен быть добавлен заголовок, окончание и оно должно быть переведено в RAW формат отправки
+        //                                                    |                  |    |     |                        |
+        uint8_t message[15] = {0x28, 0xC6, 0x00, 0x08, 0x08, 0x3F, 0x10, 0x0C, 0x86, 0x80, 0x80, 0x00, 0x00, 0x00, 0xb6};
+
+        // биты в посылке перевёрнуты, потому и делаем массивы
+        // битовый массив для температуры
 //                           16    17    18    19    20    21    22    23    24    25    26    27    28    29    30
-    uint8_t temp_arr[30] = {0x00, 0x08, 0x04, 0x0c, 0x02, 0x0A, 0x06, 0x0E, 0x01, 0x09, 0x05, 0x0D, 0x03, 0x0B, 0x07,
-                            0x03, 0x0D, 0x05, 0x09, 0x01, 0x0E, 0x06, 0x0A, 0x02, 0x0C, 0x04, 0x08, 0x00, 0x0f, 0x07};
+        uint8_t temp_arr[30] = {0x00, 0x08, 0x04, 0x0c, 0x02, 0x0A, 0x06, 0x0E, 0x01, 0x09, 0x05, 0x0D, 0x03, 0x0B, 0x07,
+                                0x03, 0x0D, 0x05, 0x09, 0x01, 0x0E, 0x06, 0x0A, 0x02, 0x0C, 0x04, 0x08, 0x00, 0x0f, 0x07};
 
 //                            16     17  18    19    20    21    22    23    24    25    26    27    29    29    30
-    //uint8_t temp_arr2[16] = {0x00, 0x08,0x04, 0x0c, 0x02, 0x0A, 0x06, 0x0E, 0x01, 0x09, 0x05, 0x0D, 0x03, 0x0B, 0x07,
-     //                        0x0f};
+        //uint8_t temp_arr2[16] = {0x00, 0x08,0x04, 0x0c, 0x02, 0x0A, 0x06, 0x0E, 0x01, 0x09, 0x05, 0x0D, 0x03, 0x0B, 0x07,
+        //                        0x0f};
 
 
 
 
-    // Массив перевёрнутых бит от 1 до 5
-    // Используется в режиме работу кондиционера, режиме AUTO, скоростях турбины
-    uint8_t array_mode[5] = {  0x20, 0xC0, 0x00, 0x80, 0x40 };
-                                //0xA0, 0x60, 0xA0, 0x20, 0xC0};
+        // Массив перевёрнутых бит от 1 до 5
+        // Используется в режиме работу кондиционера, режиме AUTO, скоростях турбины
+        uint8_t array_mode[5] = {  0x20, 0xC0, 0x00, 0x80, 0x40 };
+        //0xA0, 0x60, 0xA0, 0x20, 0xC0};
 
-    //                          quiet  low  med   high  auto
-    uint8_t array_fan[13] =  {  0x20, 0xC0, 0x40, 0x80, 0x00,
-                                0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0}; // у каждого режима в 15 байте своё смещение в массиве
+        //                          quiet  low  med   high  auto
+        uint8_t array_fan[13] =  {  0x20, 0xC0, 0x40, 0x80, 0x00,
+                                    0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0}; // у каждого режима в 15 байте своё смещение в массиве
 
-    uint8_t array_fan_dry[5] =  {0x50, 0xD0, 0x30, 0xB0, 0x70}; // у каждого режима в 15 байте своё смещение в массиве
-
-
-    // Используется в режиме AUTO
-    // режим AUTO                 0     1     2     3     4
-    uint8_t array_auto[10] = {  0x40, 0x20, 0x60, 0x10, 0x50,
-                                0x50, 0x10, 0x60, 0x20, 0x40};
+        uint8_t array_fan_dry[5] =  {0x50, 0xD0, 0x30, 0xB0, 0x70}; // у каждого режима в 15 байте своё смещение в массиве
 
 
-    uint8_t mode = mode_dry;
-    uint8_t temp = 18; // Текушая температура (18 - 30)
-    uint8_t auto_m = 0; // Уровень AUTO (0 - 4)
-    uint8_t fan_speed = fan_auto; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
-    bool poweron = true;
-    // короткая посылка - 6 быйт
-    bool poweroff = false;
-    bool air_dir = false;
-    bool swing = false;
-
-} Fuji;
+        // Используется в режиме AUTO
+        // режим AUTO                 0     1     2     3     4
+        uint8_t array_auto[10] = {  0x40, 0x20, 0x60, 0x10, 0x50,
+                                    0x50, 0x10, 0x60, 0x20, 0x40};
 
 
-int main() {
+        uint8_t mode; // = mode_dry;
+        uint8_t temp; // = 18; // Текушая температура (18 - 30)
+        uint8_t auto_m; // = 0; // Уровень AUTO (0 - 4)
+        uint8_t fan_speed; // = fan_auto; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
+        bool poweron; // = true;
+        // короткая посылка - 6 быйт
+        bool poweroff; // = false;
+        bool air_dir; // = false;
+        bool swing; // = false;
+
+    } Fuji;
+
+    Fuji.mode = mode;
+    Fuji.temp = temp;
+    Fuji.auto_m = auto_m;
+    Fuji.fan_speed = fan_speed;
+    Fuji.poweron = poweron;
+    Fuji.poweroff = poweroff;
+    Fuji.air_dir = air_dir;
+    Fuji.swing = swing;
 
     for (int v=18; v<31; v++) {
         Fuji.temp = v;
@@ -159,5 +181,24 @@ int main() {
         }
 
     }
+    //return Fuji.message;
+}
+
+
+
+//uint8_t  = mode_dry;
+//uint8_t  = 18; // Текушая температура (18 - 30)
+//uint8_t  = 0; // Уровень AUTO (0 - 4)
+//uint8_t  = fan_auto; // 4 - auto, 3 - high, 2 - med, 1 - low, 0 - quiet - скорость турбины
+//bool  = true;
+// короткая посылка - 6 быйт
+//bool  = false;
+//bool  = false;
+//bool  = false;
+
+
+int main() {
+
+    buildMsg(mode, temp, auto_m, fan_speed, poweron, poweroff, air_dir, swing);
     return 0;
 }
