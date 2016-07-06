@@ -88,7 +88,7 @@ int main() {
 
         } else {
 
-            // -------- Формируем 10й байт ----------- start
+
             // режим работы
             Fuji.message[9] = 0;
             //Fuji.message[9] &= 0x1F; // Очищаем первые три бита
@@ -108,13 +108,9 @@ int main() {
                 Fuji.temp = 18;
             }
 
-            // -------- Формируем 11й байт ----------- start
-
             //Fuji.message[10] &= 0x1F; // Очищаем первые три бита
             Fuji.message[10] = 0x00; // Очищаем
             Fuji.message[10] |= (Fuji.array_fan[Fuji.fan_speed]);
-
-            // -------- Формируем 11й байт ----------- end
 
             if (Fuji.mode == mode_heat) {
                 Fuji.message[8] |= Fuji.temp_arr[Fuji.temp - 16];
@@ -150,7 +146,6 @@ int main() {
                 Fuji.message[14] |= Fuji.temp_arr[Fuji.temp - 1];
                 Fuji.message[14] &= 0x1F; // Очищаем первые три бита
                 Fuji.message[14] |= (Fuji.array_fan_dry[Fuji.fan_speed]); //7
-
             }
 
             // Формируем биты температуры
