@@ -29,7 +29,7 @@ bool air_dir = false;
 bool swing = false;
 
 
-uint8_t* buildMsg(uint8_t mode, uint8_t temp, uint8_t auto_m, uint8_t fan_speed, bool poweron, bool poweroff, bool air_dir, bool swing) {
+uint8_t buildMsg(uint8_t mode, uint8_t temp, uint8_t auto_m, uint8_t fan_speed, bool poweron, bool poweroff, bool air_dir, bool swing) {
 
 
 
